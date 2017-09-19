@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(PLI)
+project(ILP)
 
 include_directories(path/to/Eigen)
 
