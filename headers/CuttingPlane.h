@@ -10,28 +10,18 @@
 
 using namespace std;
 
-struct Node {
-    Simplex *solver;
-    Problem *ilp;
-    Node *left;
-    Node *right;
-};
-
-class BranchBound {
+class CuttingPlane {
     private:
-        Node *root;
         int mode;
         bool foundSolution;
         double optimum;
         VectorXd solution;
 
-        long long findBranch(VectorXd vectorToSearch);
-        void findSolutions(Node *node);
-        bool isBetterSolution(double optimumFound);
+        VectorXd gomoryCut(VectorXd vectorToCut);
 
     public:
-        BranchBound(Problem *ilp, int mode);
+        CuttingPlane(Problem *ilp, int mode);
         bool hasSolution();
         double getOptimum();
         VectorXd getSolution();
-};
+}

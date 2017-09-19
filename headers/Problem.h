@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Eigen>
 
 using namespace Eigen;
@@ -13,5 +15,5 @@ class Problem {
          VectorXd getObjectiveFunction();
          VectorXd getRelations();
          MatrixXd getConstraints();
-         void addConstraint(VectorXd constraint, int relation);
+         bool addConstraint(VectorXd constraint, int relation);
 };

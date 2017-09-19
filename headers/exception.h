@@ -1,10 +1,12 @@
+#pragma once
+
 #include <string>
 #include <iostream>
 
 using namespace std;
 
 /**
- * Classe para tratamento de exceção
+ * Classe para tratamento de exceÃ§Ã£o
  */
 class Exception {
     private:

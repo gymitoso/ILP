@@ -1,58 +1,62 @@
-#include "Problem.h"
-#include <Eigen>
+#include "..\headers\Problem.h"
 
 using namespace Eigen;
 
 /**
- * Construtor
+ * @desc Construtor
  *
- * @param const VectorXd &objectiveFunction Os coeficientes da função objetivo.
- * @param const VectorXd &relations Os sinais de relação das restrições {0 -> <=; 1 -> >=; 2 -> =}.
- * @param const MatrixXd &constraints Matriz com todas as restrições.
+ * @param const VectorXd &objectiveFunction Os coeficientes da funÃ§Ã£o objetivo.
+ * @param const VectorXd &relations Os sinais de relaÃ§Ã£o das restriÃ§Ãµes {0 -> <=; 1 -> >=; 2 -> =}.
+ * @param const MatrixXd &constraints Matriz com todas as restriÃ§Ãµes.
  */
- Problem::Problem(const VectorXd &objectiveFunction, const MatrixXd &constraints, const VectorXd &relations) {
-     this->objectiveFunction = objectiveFunction;
-     this->constraints = constraints;
-     this->relations = relations;
- }
+Problem::Problem(const VectorXd &objectiveFunction, const MatrixXd &constraints, const VectorXd &relations) {
+    this->objectiveFunction = objectiveFunction;
+    this->constraints = constraints;
+    this->relations = relations;
+}
 
- /**
- * Retorna as restrições do problema
+/**
+ * @desc Retorna as restriÃ§Ãµes do problema
  *
  * @returns MatrixXd
  */
- MatrixXd Problem::getConstraints() {
-     return this->constraints;
- }
+MatrixXd Problem::getConstraints() {
+    return this->constraints;
+}
 
- /**
- * Retorna as relações das restrições do problema
+/**
+ * @desc Retorna as relaÃ§Ãµes das restriÃ§Ãµes do problema
  *
  * @returns VectorXd
  */
- VectorXd Problem::getRelations() {
-     return this->relations;
- }
+VectorXd Problem::getRelations() {
+    return this->relations;
+}
 
- /**
- * Retorna a função objetivo do problema
+/**
+ * @desc Retorna a funÃ§Ã£o objetivo do problema
  *
  * @returns VectorXd
  */
- VectorXd Problem::getObjectiveFunction() {
-     return this->objectiveFunction;
- }
+VectorXd Problem::getObjectiveFunction() {
+    return this->objectiveFunction;
+}
 
- /**
- * Adiciona uma função de restrição e sua relação
+/**
+ * @desc Adiciona uma nova funÃ§Ã£o de restriÃ§Ã£o e sua relaÃ§Ã£o
  *
- * @returns void
+ * @returns bool true se adicionou a restricao ou false caso a restriÃ§Ã£o jÃ¡ exista
  */
- void Problem::addConstraint(VectorXd constraint, int relation) {
-     this->constraints.conservativeResize(this->constraints.rows()+1, this->constraints.cols());
-     this->constraints.row(this->constraints.rows()-1) = constraint;
-     this->relations.conservativeResize(this->relations.rows()+1);
-     this->relations(this->relations.rows()-1) = relation;
- }
-
-
+bool Problem::addConstraint(VectorXd constraint, int relation) {
+    long long temp;
+    for(temp = 0; temp < this->constraints.rows(); temp++) {
+        if(((this->constraints.row(temp) - constraint.transpose()).norm() == 0) && this->relations(temp) == relation) {
+            return false;
+        }
+    }
+    this->constraints.conservativeResize(this->constraints.rows()+1, this->constraints.cols());
+    this->constraints.row(this->constraints.rows()-1) = constraint;
+    this->relations.conservativeResize(this->relations.rows()+1);
+    this->relations(this->relations.rows()-1) = relation;
+    return true;
+}

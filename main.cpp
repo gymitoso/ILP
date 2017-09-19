@@ -1,50 +1,46 @@
-#include <Eigen>
-#include "BranchBound.h"
-#include "exception.h"
+#include "headers\Interpreter.h"
+#include "headers\BranchBound.h"
+#include "headers\Exception.h"
+#include <time.h>
 
 using namespace std;
-using namespace Eigen;
 
-int main() {
+int main(int argc, char* argv[]) {
 
-	Problem *pli = NULL;
-	BranchBound *bb = NULL;
+    BranchBound *bb = NULL;
+    Interpreter *interpreter = NULL;
+    clock_t time[2];
 
-	MatrixXd constraints(4, 3);
-	VectorXd objectiveFunction(2);
-	VectorXd relations(4);
+    try {
 
-	try {
-		/*
-			Problema de maximização
-		*/
-		objectiveFunction <<	11,
-								14;
+        if(argc < 2) {
+            throw(new Exception("Digite o nome do arquivo de entrada!"));
+        }
 
-		constraints <<		1,	1,	17,
-							3,	7,	63,
-							3,	5,	48,
-							3,  1,  30;
+        interpreter = new Interpreter(argv[1]);
 
-        relations << 0, 0,  0,  0;
+        time[0] = clock();
 
+        bb = new BranchBound(interpreter->getProblem(), interpreter->getMode());
 
-        pli = new Problem(objectiveFunction, constraints, relations);
+        time[1] = clock();
 
-        bb = new BranchBound(pli, MAXIMIZE);
+        double totalTime = (time[1] - time[0]) * 1000.00 / CLOCKS_PER_SEC;
 
-		if (bb->hasSolution()) {
-			cout << "O valor otimizado e: " << bb->getOptimum() << endl;
-			cout << "A solucao e: " << bb->getSolution().transpose() << endl;
-		} else {
-			cout << "PLI sem solucao." << endl;
-		}
-	} catch (Exception *ex) {
-		ex->print();
-	}
+        if (bb->hasSolution()) {
+            cout << "Valor otimizado: " << bb->getOptimum() << endl;
+            cout << "Solucao: [" << bb->getSolution().transpose() << "]"<< endl;
+            cout << "Tempo: " << totalTime << "ms" << endl;
+        } else {
+            cout << "Solucao nao encontrada" << endl;
+        }
 
-	delete bb;
+    } catch (Exception *ex) {
+        ex->print();
+    }
 
-	return 0;
+    delete bb;
+    delete interpreter;
+
+    return 0;
 }
-

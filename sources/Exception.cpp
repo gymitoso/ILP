@@ -1,50 +1,50 @@
-#include "exception.h"
+#include "..\headers\Exception.h"
 
 /**
- * Construtor
- * Passa apenas uma mensagem de erro
+ * @desc Construtor
+ * @desc Passa apenas uma mensagem de erro
  *
  * @param error_msg
  * @returns Exception
  */
 Exception::Exception(string error_msg) {
-	this->error_msg = error_msg;
+    this->error_msg = error_msg;
 }
 
 /**
- * Construtor
- * Passa uma mensagem de erro e o código do erro
+ * @desc Construtor
+ * @desc Passa uma mensagem de erro e o cÃ³digo do erro
  *
  * @param error_code
  * @param error_msg
  * @returns Exception
  */
 Exception::Exception(unsigned long error_code, string error_msg) {
-	this->error_msg = error_msg;
-	this->error_code = error_code;
+    this->error_msg = error_msg;
+    this->error_code = error_code;
 }
 
 /**
- * Mostra no console a mensagem do erro.
+ * @desc Mostra no console a mensagem do erro.
  */
 void Exception::print() {
-	cout<< this->error_msg << endl;
+    cout<< this->error_msg << endl;
 }
 
 /**
- * Retorna o código do erro.
+ * @desc Retorna o cÃ³digo do erro.
  *
  * @returns unsigned long
  */
 unsigned long Exception::getErrorCode() {
-	return this->error_code;
+    return this->error_code;
 }
 
 /**
- * Retorna a mensagem da exceção
+ * @desc Retorna a mensagem da exceÃ§Ã£o
  *
  * @returns string
  */
 string Exception::getMessage() {
-	return this->error_msg;
+    return this->error_msg;
 }
