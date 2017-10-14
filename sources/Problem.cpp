@@ -1,4 +1,4 @@
-#include "..\headers\Problem.h"
+#include "../headers/Problem.h"
 
 using namespace Eigen;
 

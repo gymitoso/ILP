@@ -1,5 +1,5 @@
-#include "..\headers\Interpreter.h"
-#include "..\headers\Exception.h"
+#include "../headers/Interpreter.h"
+#include "../headers/Exception.h"
 #include <unordered_map>
 
 using namespace Eigen;

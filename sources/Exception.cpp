@@ -1,4 +1,4 @@
-#include "..\headers\Exception.h"
+#include "../headers/Exception.h"
 
 /**
  * @desc Construtor

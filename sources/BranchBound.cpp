@@ -1,4 +1,4 @@
-#include "..\headers\BranchBound.h"
+#include "../headers/BranchBound.h"
 #include <Eigen>
 #include <cmath>
 #include <limits>
