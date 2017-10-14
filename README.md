@@ -12,6 +12,6 @@ applying the branch-and-bound technique with the Simplex algorithm.
 
 ## How to run
 1. Add Eigen path to CMakeLists.txt
-- Run: ``` cmake . ``` or ```cmake -G "MinGW Makefiles" .``` (in my case). Check: https://cmake.org/documentation/
-- Run: ```make```
-- Run: ```ILP path/to/inputFile```
+2. Run: ``` cmake . ``` or ```cmake -G "MinGW Makefiles" .``` (in my case). Check: https://cmake.org/documentation/
+3. Run: ```make```
+4. Run: ```ILP path/to/inputFile```
