@@ -1,12 +1,12 @@
 #include <Eigen>
 #include <unordered_map>
-#include "..\headers\Simplex.h"
-#include "..\headers\Exception.h"
+#include "../headers/Simplex.h"
+#include "../headers/Exception.h"
 
 using namespace Eigen;
 
 /**
- * @desc Construtor
+ * @desc Construtor padrão
  *
  * @param int mode Pode ser: SIMPLEX_MINIMIZE, SIMPLEX_MAXIMIZE
  * @param const VectorXd &objectiveFunction Os coeficientes da função objetivo.
@@ -29,7 +29,7 @@ Simplex::Simplex(int mode, const VectorXd &objectiveFunction, const MatrixXd &co
     if(numberOfArtificials > 0) {
         //caso a minimizacao não seja 0, não existe solução para a PLI
         this->simplexSolver(this->numberOfVariables, SIMPLEX_MINIMIZE, FIRST_PHASE);
-        if (this->tableau(0, this->tableau.cols() - 1) != 0) {
+        if (this->adjustPrecision(this->tableau(0, this->tableau.cols() - 1)) != 0) {
             return; // Sem solução
         }
         //remove a primeira linha criada para cancelar as variáveis artificiais
@@ -42,6 +42,51 @@ Simplex::Simplex(int mode, const VectorXd &objectiveFunction, const MatrixXd &co
 
     /*
         Segunda fase Simplex
+    */
+    if (!this->simplexSolver(this->numberOfVariables, mode, SECOND_PHASE)) {
+        return; // Sem solução
+    }
+
+    this->searchSolution();
+
+}
+
+/**
+ * @desc Construtor utilizado pelo método de Planos de Corte
+ *
+ * @param int mode Pode ser: SIMPLEX_MINIMIZE, SIMPLEX_MAXIMIZE
+ * @param const VectorXd &objectiveFunction Os coeficientes da função objetivo.
+ * @param const VectorXd &relations Os sinais de relacao das restrições {0 -> <=; 1 -> >=; 2 -> =}.
+ * @param const MatrixXd &constraints Matriz com todas as restricoes.
+ * @param const MatrixXd &cuts cortes gerados pelo método planos de corte
+ * @returns Simplex
+*/
+Simplex::Simplex(int mode, const VectorXd &objectiveFunction, const MatrixXd &constraints, const VectorXd &relations, const MatrixXd &cuts) {
+    this->foundSolution = false;
+    this->optimum = 0;
+    this->numberOfVariables = objectiveFunction.rows();
+
+    this->isValidEntry(mode, objectiveFunction, constraints, relations);
+
+    int numberOfArtificials = this->buildTableauWithCuts(mode, objectiveFunction, constraints, relations, cuts);
+
+    /*
+        Primeira fase Simplex (os cortes sempre terão variáveis artificiais)
+    */
+    //caso a minimizacao não seja 0, não existe solução para a PLI
+    this->simplexSolver(this->numberOfVariables, SIMPLEX_MINIMIZE, FIRST_PHASE);
+    if (this->adjustPrecision(this->tableau(0, this->tableau.cols() - 1)) != 0) {
+        return; // Sem solução
+    }
+    //remove a primeira linha criada para cancelar as variáveis artificiais
+    this->removeRow(0);
+    //remove as colunas das variáveis artificiais
+    for(long long  i = 0; i < numberOfArtificials; i++) {
+        this->removeColumn(this->tableau.cols() - 2);
+    }
+
+    /*
+     Segunda fase Simplex
     */
     if (!this->simplexSolver(this->numberOfVariables, mode, SECOND_PHASE)) {
         return; // Sem solução
@@ -73,10 +118,19 @@ double Simplex::getOptimum() {
 /**
  * @desc Retorna o valor das variáveis para a solução encontrada.
  *
- * @returns VectorXd
+ * @returns VectorXd vetor contendo a solução do problema
  */
 VectorXd Simplex::getSolution() {
     return this->solution;
+}
+
+/**
+ * @desc Retorna a matriz tableau.
+ *
+ * @returns MatrixXd
+ */
+MatrixXd Simplex::getTableau() {
+    return this->tableau;
 }
 
 /**
@@ -391,6 +445,60 @@ int Simplex::buildTableau(int mode, const VectorXd &objectiveFunction, const Mat
 
         this->tableau <<    -objectiveFunction.transpose(), MatrixXd::Zero(1, constraints.rows() + 1),
                 constraints.leftCols(this->numberOfVariables),  MatrixXd::Identity(constraints.rows(), constraints.rows()), constraints.rightCols(1);
+    }
+
+    return numberOfArtificials;
+}
+
+/**
+ * @desc Método para construir tableau inicial com cortes
+ *
+ * @param os mesmos do método construtor com cortes
+ * @returns int variáveis artificiais
+ */
+int Simplex::buildTableauWithCuts(int mode, const VectorXd &objectiveFunction, const MatrixXd &constraints, const VectorXd &relations, const MatrixXd &cuts) {
+    long long temp;
+    int numberOfArtificials = 0, numberOfCuts;
+
+    for(long long i = 0; i < relations.rows(); i++) {
+        if(relations(i) != 0) {
+            numberOfArtificials++;
+        }
+    }
+
+    numberOfCuts = cuts.rows();
+    numberOfArtificials += numberOfCuts;
+
+    this->tableau.resize(constraints.rows() + numberOfCuts + 2 , this->numberOfVariables + constraints.rows() + numberOfArtificials + numberOfCuts + 1);
+
+    this->tableau <<    MatrixXd::Zero(1, constraints.rows() + this->numberOfVariables + numberOfArtificials + numberOfCuts + 1),
+            -objectiveFunction.transpose(), MatrixXd::Zero(1, constraints.rows() + numberOfArtificials + numberOfCuts + 1),
+            constraints.leftCols(this->numberOfVariables),  MatrixXd::Identity(constraints.rows(), constraints.rows()), MatrixXd::Zero(constraints.rows(), numberOfArtificials+numberOfCuts), constraints.rightCols(1),
+            cuts, MatrixXd::Zero(numberOfCuts, this->tableau.cols() - cuts.cols());
+
+    if (numberOfArtificials != numberOfCuts) {
+        temp = 0;
+        for(long long i = 2; i < this->tableau.rows()-numberOfCuts; i++) {
+            if(relations(i-2) == 1) {
+                this->tableau(i, this->numberOfVariables + i - 2) = -1;
+                this->tableau.row(0)+=this->tableau.row(i)*relations(i-2);
+                this->tableau(i, this->tableau.cols() - numberOfArtificials - 1 + temp) = 1;
+                temp++;
+            } else if (relations(i-2) == 2) {
+                removeColumn(this->numberOfVariables + i - 2);
+                this->tableau.row(0)+=this->tableau.row(i)*relations(i-2);
+                this->tableau(i, this->tableau.cols() - numberOfArtificials - 1 + temp) = 1;
+                temp++;
+            }
+        }
+    }
+
+    for(int i = 0; i < numberOfCuts; i++) {
+        this->tableau(this->tableau.rows()-1-i, this->tableau.cols()-1) = this->tableau(this->tableau.rows()-1-i, cuts.cols()-1);
+        this->tableau(this->tableau.rows()-1-i, cuts.cols()-1) = 0;
+        this->tableau(this->tableau.rows()-1-i, cuts.cols()-1-i) = -1;
+        this->tableau.row(0)+=this->tableau.row(this->tableau.rows()-1-i);
+        this->tableau(this->tableau.rows()-1-i, this->tableau.cols() - 2 - i) = 1;
     }
 
     return numberOfArtificials;
