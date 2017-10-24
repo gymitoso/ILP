@@ -16,8 +16,13 @@ class Interpreter {
         VectorXd relations;
         ifstream in;
 
+        void readFile();
         void getObjectiveAndMode(string line);
         bool getConstraint(string line);
+        void readLPFile();
+        bool getLPConstraint(string line);
+        bool getLPBound(string line);
+        void getLPObjectiveAndMode(string line);
 
     public:
         Interpreter(const string fileName);
